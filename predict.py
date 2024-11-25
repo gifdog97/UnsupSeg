@@ -11,6 +11,8 @@ from tqdm import tqdm
 from next_frame_classifier import NextFrameClassifier
 from utils import detect_peaks, max_min_norm, replicate_first_k_frames
 
+SECOND_THRESHOLD = 300
+
 
 def generate_aligned_path(
     root_path: str, audio_root_path: str, audio_path: Path, extension: str = ".txt"
@@ -43,6 +45,8 @@ def main(audio_root_path: str, output_path: str, ckpt: str, prominence: float):
         assert (
             sr == 16000
         ), "model was trained with audio sampled at 16khz, please downsample."
+        if len(audio) > sr * SECOND_THRESHOLD:
+            continue
         audio = audio[0]
         audio = audio.unsqueeze(0)
 
@@ -96,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_boundary_path",
         help="path to output boundaries",
-        default="/data/skando/speechLM/experiment/boundaries/librispeech/train-clean-100",
+        default="/data/skando/speechLM/experiment/boundaries/librispeech/train-clean-100/phoneme",
     )
     args = parser.parse_args()
     main(args.audio_path, args.output_boundary_path, args.ckpt, args.prominence)
