@@ -45,7 +45,7 @@ def main(audio_root_path: str, output_path: str, ckpt: str, prominence: float):
         assert (
             sr == 16000
         ), "model was trained with audio sampled at 16khz, please downsample."
-        if len(audio) > sr * SECOND_THRESHOLD:
+        if len(audio[0]) > sr * SECOND_THRESHOLD:
             continue
         audio = audio[0]
         audio = audio.unsqueeze(0)
