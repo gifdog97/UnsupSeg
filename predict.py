@@ -39,6 +39,9 @@ def main(audio_root_path: str, output_path: str, ckpt: str, prominence: float):
         print(f"overriding prominence with {prominence}")
         peak_detection_params["prominence"] = prominence
 
+    boundary_path = f"{args.output_boundary_path}/boundaries.tsv"
+    with open(boundary_path, "w") as f:
+        f.write("path\tboundary\n")
     for audio_path in tqdm(list(Path(audio_root_path).glob("**/*.flac"))):
         # load data
         audio, sr = torchaudio.load(audio_path)
@@ -70,11 +73,9 @@ def main(audio_root_path: str, output_path: str, ckpt: str, prominence: float):
             )  # transform frame indexes to milliseconds
         except:  # if the audio is too short, it seems the prediction fails
             preds = []
-        boundary_path = generate_aligned_path(output_path, audio_root_path, audio_path)
-        os.makedirs(boundary_path.parent, exist_ok=True)
-        with open(boundary_path, "w") as f:
-            for b in preds:
-                f.write(str(b) + "\n")
+        with open(boundary_path, "a") as f:
+            boundary_str = " ".join([str(b) for b in preds])
+            f.write(f"{audio_path}\t{boundary_str}\n")
 
 
 if __name__ == "__main__":
@@ -95,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--audio_path",
         help="path to dataset for evaluation, where .wav, .phn, and .wrd files are stored",
-        default="/NAS/Personal/skando/dataset/LibriSpeech/train-clean-100",
+        default="/data/skando/dataset/LibriSpeech/train-clean-100",
     )
     parser.add_argument(
         "--output_boundary_path",
@@ -103,4 +104,5 @@ if __name__ == "__main__":
         default="/data/skando/speechLM/experiment/boundaries/librispeech/train-clean-100/phoneme",
     )
     args = parser.parse_args()
+    os.makedirs(args.output_boundary_path, exist_ok=True)
     main(args.audio_path, args.output_boundary_path, args.ckpt, args.prominence)
